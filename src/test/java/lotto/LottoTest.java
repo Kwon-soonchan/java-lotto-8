@@ -8,6 +8,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class LottoTest {
+    @DisplayName("로또_번호의_개수가_6개가_넘어가면_예외가_발생한다.")
     @Test
     void 로또_번호의_개수가_6개가_넘어가면_예외가_발생한다() {
         assertThatThrownBy(() -> new Lotto(List.of(1, 2, 3, 4, 5, 6, 7)))
@@ -22,4 +23,25 @@ class LottoTest {
     }
 
     // TODO: 추가 기능 구현에 따른 테스트 코드 작성
+    @DisplayName("로또_번호의_개수가_6개가_안되면_예외가_발생한다.")
+    @Test
+    void 로또_번호의_개수가_6개가_안되면_예외가_발생한다() {
+        assertThatThrownBy(() -> new Lotto(List.of(1, 2, 3, 4, 5)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @DisplayName("로또_번호가_45보다_크면_예외가_발생한다.")
+    @Test
+    void 로또_번호가_45보다_크면_예외가_발생한다() {
+        assertThatThrownBy(() -> new Lotto(List.of(12, 23, 34, 45, 56, 67)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @DisplayName("로또_번호가_1보다_작으면_예외가_발생한다.")
+    @Test
+    void 로또_번호가_1보다_작으면_예외가_발생한다() {
+        assertThatThrownBy(() -> new Lotto(List.of(-1, 2, 3, 4, 5, 6)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
 }
