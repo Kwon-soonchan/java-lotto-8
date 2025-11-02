@@ -1,40 +1,37 @@
 package lotto.controller;
 
-import static camp.nextstep.edu.missionutils.Randoms.pickUniqueNumbersInRange;
-import static lotto.domain.Lotto.LOTTO_NUMBER_COUNT;
 import static lotto.domain.Lotto.LOTTO_NUMBER_MAX;
 import static lotto.domain.Lotto.LOTTO_NUMBER_MIN;
+import static lotto.domain.LottoMachine.LOTTO_PRICE;
 
 import java.util.ArrayList;
 import java.util.List;
 import lotto.domain.Lotto;
+import lotto.domain.LottoMachine;
 import lotto.domain.PrizeCalculator;
 import lotto.domain.WinningNumbers;
 import lotto.view.InputView;
 import lotto.view.OutputView;
 
 public class LottoController {
-    private static final int LOTTO_PRICE = 1000;
 
     private final InputView inputView;
     private final OutputView outputView;
+    private final LottoMachine lottoMachine;
 
     public LottoController() {
         this.inputView = new InputView();
         this.outputView = new OutputView();
+        this.lottoMachine = new LottoMachine();
     }
 
     public void run() {
-        int lottoPrice = getValidLottoPrice();
-        int lottoCnt = lottoPrice / LOTTO_PRICE;
-        outputView.printLottoCount(lottoCnt);
-
-        List<Lotto> buyLottos = createLottos(lottoCnt);
+        List<Lotto> buyLottos = purchaseLottos();
+        outputView.printLottoCount(buyLottos.size());
         printPurchasedLottos(buyLottos);
 
         List<Integer> winningNumbersList = getValidWinningNumbers();
         int bonusNumber = getValidBonusNumber(winningNumbersList);
-
         WinningNumbers winningNumbers = new WinningNumbers(winningNumbersList, bonusNumber);
 
         PrizeCalculator calculator = new PrizeCalculator();
@@ -43,28 +40,22 @@ public class LottoController {
         outputView.printStatisticsHeader();
         outputView.printStatistics(calculator.getStatistics());
 
+        int lottoPrice = buyLottos.size() * LOTTO_PRICE;
         double profitRate = calculator.calculateProfitRate(lottoPrice);
         outputView.printProfitRate(profitRate);
     }
 
-    private int getValidLottoPrice() {
+    private List<Lotto> purchaseLottos() {
         while (true) {
             try {
                 String priceInput = inputView.readLottoPrice();
                 int price = Integer.parseInt(priceInput);
-                validateLottoPrice(price);
-                return price;
+                return lottoMachine.purchase(price);
             } catch (NumberFormatException e) {
                 outputView.printError("[ERROR] 유효하지 않은 숫자입니다.");
             } catch (IllegalArgumentException e) {
                 outputView.printError(e.getMessage());
             }
-        }
-    }
-
-    private void validateLottoPrice(int price) {
-        if (price <= 0 || price % LOTTO_PRICE != 0) {
-            throw new IllegalArgumentException("[ERROR] 구입 금액은 1,000원 단위의 양수여야 합니다.");
         }
     }
 
@@ -109,14 +100,6 @@ public class LottoController {
         if (winningNumbersList.contains(bonusNum)) {
             throw new IllegalArgumentException("[ERROR] 보너스 번호가 당첨 번호와 중복됩니다.");
         }
-    }
-
-    private List<Lotto> createLottos(int count) {
-        List<Lotto> lottos = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            lottos.add(new Lotto(pickUniqueNumbersInRange(LOTTO_NUMBER_MIN, LOTTO_NUMBER_MAX, LOTTO_NUMBER_COUNT)));
-        }
-        return lottos;
     }
 
     private void printPurchasedLottos(List<Lotto> lottos) {
