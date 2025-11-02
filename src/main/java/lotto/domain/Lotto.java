@@ -1,5 +1,6 @@
 package lotto.domain;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,8 +15,8 @@ public class Lotto {
 
     public Lotto(List<Integer> numbers) {
         validate(numbers);
-        Collections.sort(numbers);
-        this.numbers = numbers;
+        this.numbers = new ArrayList<>(numbers);
+        Collections.sort(this.numbers);
     }
 
     private void validate(List<Integer> numbers) {
@@ -37,7 +38,7 @@ public class Lotto {
 
     // TODO: 추가 기능 구현
     public List<Integer> getNumbers() {
-        return numbers;
+        return List.copyOf(numbers);
     }
 
     // ApplicationTest에서 println(newLotto)를 쓰기 위해 추가
