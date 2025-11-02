@@ -4,7 +4,10 @@ import static camp.nextstep.edu.missionutils.Randoms.pickUniqueNumbersInRange;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors; // Collectors 임포트
 import lotto.domain.Lotto;
+import lotto.domain.PrizeCalculator; // Domain 임포트
+import lotto.domain.WinningNumbers; // Domain 임포트
 import lotto.view.InputView;
 import lotto.view.OutputView;
 
@@ -18,80 +21,60 @@ public class LottoController {
     }
 
     public void run() {
-        // 1. 구매
+        // 1. 로또 구매 (메서드 분리)
         int lottoPrice = Integer.parseInt(inputView.readLottoPrice());
         int lottoCnt = lottoPrice / 1000;
         outputView.printLottoCount(lottoCnt);
 
-        // 2. 로또 발행
-        List<Lotto> buyLottos = new ArrayList<>();
-        for(int i=0;i<lottoCnt;i++) {
-            List<Integer> lottoNumbers = pickUniqueNumbersInRange(1,45,6);
-            Lotto newLotto = new Lotto(lottoNumbers);
-            buyLottos.add(newLotto);
-            outputView.printPurchasedLotto(lottoNumbers);
-        }
-        outputView.printEmptyLine();
+        List<Lotto> buyLottos = createLottos(lottoCnt);
+        printPurchasedLottos(buyLottos);
 
-        // 3. 당첨 번호 입력
-        String[] winningNumbersStr = inputView.readWinningNumbers().split(",");
-        outputView.printEmptyLine();
+        // 2. 당첨/보너스 번호 생성 (메서드 분리)
+        WinningNumbers winningNumbers = createWinningNumbers();
 
-        List<Integer> winningNumbers = new ArrayList<>();
-        for(String numberStr : winningNumbersStr) {
-            winningNumbers.add(Integer.parseInt(numberStr.trim()));
-        }
+        // 3. 통계 계산 (Domain 객체에 위임)
+        PrizeCalculator calculator = new PrizeCalculator();
+        calculator.calculateStatistics(buyLottos, winningNumbers);
 
-        // 4. 보너스 번호 입력
-        int bonusNumber = Integer.parseInt(inputView.readBonusNumber());
-        outputView.printEmptyLine();
-
-        // 5. 통계 헤더 출력
+        // 4. 결과 출력
         outputView.printStatisticsHeader();
+        outputView.printStatistics(calculator.getStatistics());
 
-        // 6. 통계 계산
-        int[] matching = new int[5];
-        long totalMoney = 0;
-        for(Lotto myLotto : buyLottos) {
-            boolean checkBonus = false;
-            int sameCnt = 0;
-            List<Integer> lottoNumbers = myLotto.getNumbers();
-
-            for(int lottoNumber : lottoNumbers) {
-                if(winningNumbers.contains(lottoNumber)) {
-                    sameCnt++;
-                }
-            }
-            if(lottoNumbers.contains(bonusNumber)) {
-                checkBonus = true;
-            }
-
-            if(sameCnt == 3) {
-                matching[0]++;
-                totalMoney += 5000;
-            }
-            else if(sameCnt == 4) {
-                matching[1]++;
-                totalMoney += 50000;
-            }
-            else if(sameCnt == 5 && !checkBonus) {
-                matching[2]++;
-                totalMoney +=1500000;
-            }
-            else if(sameCnt == 5 && checkBonus) {
-                matching[3]++;
-                totalMoney += 30000000;
-            }
-            else if(sameCnt == 6) {
-                matching[4]++;
-                totalMoney += 2000000000;
-            }
-
-        }
-        // 7. 통계 결과 출력
-        outputView.printStatistics(matching);
-
-        double profitRate = (double) totalMoney / lottoPrice * 100.0;
+        double profitRate = calculator.calculateProfitRate(lottoPrice);
         outputView.printProfitRate(profitRate);
+    }
+
+    // (요구사항: indent 2, 메서드 15라인 제한)
+    // 로또 생성 로직 분리
+    private List<Lotto> createLottos(int count) {
+        List<Lotto> lottos = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            lottos.add(new Lotto(pickUniqueNumbersInRange(1, 45, 6)));
+        }
+        return lottos;
+    }
+
+    // 로또 출력 로직 분리
+    private void printPurchasedLottos(List<Lotto> lottos) {
+        for (Lotto lotto : lottos) {
+            outputView.printPurchasedLotto(lotto.getNumbers());
+        }
+        outputView.printEmptyLine();
+    }
+
+    // 당첨 번호 생성 로직 분리
+    private WinningNumbers createWinningNumbers() {
+        String[] winningStr = inputView.readWinningNumbers().split(",");
+        outputView.printEmptyLine();
+
+        List<Integer> numbers = new ArrayList<>();
+        for (String numStr : winningStr) {
+            numbers.add(Integer.parseInt(numStr.trim()));
+        }
+
+        int bonus = Integer.parseInt(inputView.readBonusNumber());
+        outputView.printEmptyLine();
+
+        return new WinningNumbers(numbers, bonus);
     }
 }
