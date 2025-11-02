@@ -1,6 +1,5 @@
 package lotto.controller;
 
-import static camp.nextstep.edu.missionutils.Console.readLine;
 import static camp.nextstep.edu.missionutils.Randoms.pickUniqueNumbersInRange;
 
 import java.util.ArrayList;
@@ -19,36 +18,38 @@ public class LottoController {
     }
 
     public void run() {
+        // 1. 구매
         int lottoPrice = Integer.parseInt(inputView.readLottoPrice());
         int lottoCnt = lottoPrice / 1000;
-
         outputView.printLottoCount(lottoCnt);
 
+        // 2. 로또 발행
         List<Lotto> buyLottos = new ArrayList<>();
         for(int i=0;i<lottoCnt;i++) {
             List<Integer> lottoNumbers = pickUniqueNumbersInRange(1,45,6);
             Lotto newLotto = new Lotto(lottoNumbers);
             buyLottos.add(newLotto);
-            System.out.println(lottoNumbers);
+            outputView.printPurchasedLotto(lottoNumbers);
         }
-        System.out.println();
+        outputView.printEmptyLine();
 
-        System.out.println("당첨 번호를 입력해 주세요.");
-        String[] winningNumbersStr = readLine().split(",");
-        System.out.println();
+        // 3. 당첨 번호 입력
+        String[] winningNumbersStr = inputView.readWinningNumbers().split(",");
+        outputView.printEmptyLine();
 
         List<Integer> winningNumbers = new ArrayList<>();
         for(String numberStr : winningNumbersStr) {
             winningNumbers.add(Integer.parseInt(numberStr.trim()));
         }
 
-        System.out.println("보너스 번호를 입력해 주세요.");
-        int bonusNumber = Integer.parseInt(readLine());
-        System.out.println();
+        // 4. 보너스 번호 입력
+        int bonusNumber = Integer.parseInt(inputView.readBonusNumber());
+        outputView.printEmptyLine();
 
-        System.out.println("당첨 통계");
-        System.out.println("---");
+        // 5. 통계 헤더 출력
+        outputView.printStatisticsHeader();
 
+        // 6. 통계 계산
         int[] matching = new int[5];
         long totalMoney = 0;
         for(Lotto myLotto : buyLottos) {
@@ -87,13 +88,10 @@ public class LottoController {
             }
 
         }
-        System.out.println("3개 일치 (5,000원) - " + matching[0] + "개");
-        System.out.println("4개 일치 (50,000원) - " + matching[1] + "개");
-        System.out.println("5개 일치 (1,500,000원) - " + matching[2] + "개");
-        System.out.println("5개 일치, 보너스  볼 일치 (30,000,000원) - " + matching[3] + "개");
-        System.out.println("6개 일치 (2,000,000,000원) - " + matching[4] + "개");
+        // 7. 통계 결과 출력
+        outputView.printStatistics(matching);
 
         double profitRate = (double) totalMoney / lottoPrice * 100.0;
-        System.out.println("총 수익률은 " + String.format("%.1f", profitRate) + "%입니다.");
+        outputView.printProfitRate(profitRate);
     }
 }
